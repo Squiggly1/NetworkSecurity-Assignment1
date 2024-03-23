@@ -1,6 +1,7 @@
 from typing import Tuple
 from Crypto.Hash import SHA256
 from lib.helpers import read_hex
+from random import randrange
 
 # Project TODO: Is this the best choice of prime? Why? Why not? Feel free to replace this!
 
@@ -17,11 +18,20 @@ C2007CB8 A163BF05 98DA4836 1C55D39A 69163FA8 FD24CF5F
 # Convert from the value supplied in the RFC to an integer
 prime = read_hex(raw_prime)
 
+generator = 2 # As per RFC 3526
+
 # Project TODO: Implement this function!
+# Done, see below. priv = private key, pub = public key.
+# Generated as per rfc2631 2.2 Key Generation.
 def create_dh_key() -> Tuple[int, int]:
     # Creates a Diffie-Hellman key
+    
+    priv = randrange(1, prime-2)
+
+    pub = generator ** priv % prime
+
     # Returns (public, private)
-    return (1, 1)
+    return (pub, priv)
 
 
 def calculate_dh_secret(their_public: int, my_private: int) -> bytes:
