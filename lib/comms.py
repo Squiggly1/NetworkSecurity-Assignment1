@@ -1,8 +1,11 @@
+import json
+
+from base64 import b64encode
 import struct
 import secrets
 
 from dh import create_dh_key, calculate_dh_secret
-from .xor import XOR
+from Crypto.Cipher import AES
 from lib.helpers import appendMac, macCheck, appendSalt, generate_random_string
 
 
@@ -18,7 +21,7 @@ class StealthConn(object):
     def initiate_session(self):
         # Perform the initial connection handshake for agreeing on a shared secret
 
-        # This can be broken into code run just on the server or just on the clientasdsad
+        # This can be broken into code run just on the server or just on the client
         if self.server or self.client:
             my_public_key, my_private_key = create_dh_key()
             # Send them our public key
@@ -33,8 +36,21 @@ class StealthConn(object):
         if self.shared_secret:
             # Encrypt the message
             # Project TODO: Is XOR the best cipher here? Why not? Use a more secure cipher (from the pycryptodome library)
-            cipher = XOR(self.shared_secret)
+
+            # Modify XOR to AES CTR mode.
+            cipher = AES.new(self.shared_secret, AES.MODE_CTR)
+
+            # Encrypt the data and encode it in base64
             data_to_send = cipher.encrypt(data)
+            
+            # Create Nonce, in this case, automatically generated.
+
+            nonce = cipher.nonce
+
+            # Create the dictionary to send
+
+            result = {'nonce':nonce, 'ciphertext':data_to_send}
+
             if self.verbose:
                 print()
                 print("Original message : {}".format(data))
@@ -45,9 +61,9 @@ class StealthConn(object):
             data_to_send = data
 
         # Encode the data's length into an unsigned two byte int ('H')
-        pkt_len = struct.pack("H", len(data_to_send))
+        pkt_len = struct.pack("H", len(result))
         self.conn.sendall(pkt_len)
-        self.conn.sendall(data_to_send)
+        self.conn.sendall(result)
 
     def recv(self):
         # Decode the data's length from an unsigned two byte int ('H')
@@ -59,7 +75,10 @@ class StealthConn(object):
 
             encrypted_data = self.conn.recv(pkt_len)
             # Project TODO: as in send(), change the cipher here.
-            cipher = XOR(self.shared_secret)
+
+            # Changed cipher to AES, just like recieved data.
+            cipher = AES.new(self.shared_secret, AES.MODE_CTR)
+
             original_msg = cipher.decrypt(encrypted_data)
 
             if self.verbose:
