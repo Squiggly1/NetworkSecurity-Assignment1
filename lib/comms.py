@@ -1,8 +1,7 @@
-import json
+import pickle
 
-from base64 import b64encode
 import struct
-import secrets
+
 
 from dh import create_dh_key, calculate_dh_secret
 from Crypto.Cipher import AES
@@ -40,53 +39,70 @@ class StealthConn(object):
             # Modify XOR to AES CTR mode.
             cipher = AES.new(self.shared_secret, AES.MODE_CTR)
 
-            # Encrypt the data and encode it in base64
+            
+
+            # Encrypt the data 
             data_to_send = cipher.encrypt(data)
             
             # Create Nonce, in this case, automatically generated.
-
             nonce = cipher.nonce
 
             # Create the dictionary to send
+            dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send}
 
-            result = {'nonce':nonce, 'ciphertext':data_to_send}
+            # pickle the dictionary
+            dict_to_send = pickle.dumps(dict_to_send)
+
 
             if self.verbose:
                 print()
                 print("Original message : {}".format(data))
-                print("Encrypted data: {}".format(repr(data_to_send)))
-                print("Sending packet of length: {}".format(len(data_to_send)))
+                print("Encrypted data: {}".format(repr(dict_to_send)))
+                print("Sending packet of length: {}".format(len(dict_to_send)))
                 print()
         else:
-            data_to_send = data
+            dict_to_send = data
 
         # Encode the data's length into an unsigned two byte int ('H')
-        pkt_len = struct.pack("H", len(result))
-        self.conn.sendall(pkt_len)
-        self.conn.sendall(result)
+
+        pkt_len = struct.pack("H", len(dict_to_send)) 
+
+        self.conn.sendall(pkt_len) # 
+        self.conn.sendall(dict_to_send) # 
 
     def recv(self):
         # Decode the data's length from an unsigned two byte int ('H')
-        pkt_len_packed = self.conn.recv(struct.calcsize("H"))
-        unpacked_contents = struct.unpack("H", pkt_len_packed)
-        pkt_len = unpacked_contents[0]
+        pkt_len_packed = self.conn.recv(struct.calcsize("H")) # 
+        unpacked_contents = struct.unpack("H", pkt_len_packed) # 
+
+        pkt_len = unpacked_contents[0] # 
 
         if self.shared_secret:
+            try:
 
-            encrypted_data = self.conn.recv(pkt_len)
-            # Project TODO: as in send(), change the cipher here.
+                encrypted_data = self.conn.recv(pkt_len)
+                # Project TODO: as in send(), change the cipher here.
 
-            # Changed cipher to AES, just like recieved data.
-            cipher = AES.new(self.shared_secret, AES.MODE_CTR)
+                # Changed cipher to AES, just like recieved data.
 
-            original_msg = cipher.decrypt(encrypted_data)
+                b64 = pickle.loads(encrypted_data)
 
-            if self.verbose:
-                print()
-                print("Receiving message of length: {}".format(len(encrypted_data)))
-                print("Encrypted data: {}".format(repr(encrypted_data)))
-                print("Original message: {}".format(original_msg))
-                print()
+                nonce = b64['nonce']
+                ct = b64['ciphertext']
+                
+                cipher = AES.new(self.shared_secret, AES.MODE_CTR, nonce=nonce)
+
+                original_msg = cipher.decrypt(ct)
+
+                if self.verbose:
+                    print()
+                    print("Receiving message of length: {}".format(len(encrypted_data)))
+                    print("Encrypted data: {}".format(repr(encrypted_data)))
+                    print("Original message: {}".format(original_msg))
+                    print()
+            except (ValueError, KeyError):
+
+                print("Incorrect decryption")   
 
         else:
             original_msg = self.conn.recv(pkt_len)

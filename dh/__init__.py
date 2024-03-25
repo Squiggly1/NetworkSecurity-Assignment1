@@ -28,7 +28,7 @@ def create_dh_key() -> Tuple[int, int]:
     
     priv = randrange(1, prime-2)
 
-    pub = generator ** priv % prime
+    pub = pow(generator, priv, prime)
 
     # Returns (public, private)
     return (pub, priv)
