@@ -23,6 +23,7 @@ generator = 2 # As per RFC 3526
 # Project TODO: Implement this function!
 # Done, see below. priv = private key, pub = public key.
 # Generated as per rfc2631 2.2 Key Generation.
+# Task 1
 def create_dh_key() -> Tuple[int, int]:
     # Creates a Diffie-Hellman key
     

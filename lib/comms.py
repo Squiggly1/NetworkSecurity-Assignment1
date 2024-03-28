@@ -38,6 +38,7 @@ class StealthConn(object):
             # Project TODO: Is XOR the best cipher here? Why not? Use a more secure cipher (from the pycryptodome library)
 
             # Modify XOR to AES CTR mode.
+            # Task 2
             cipher = AES.new(self.shared_secret, AES.MODE_CTR)
 
             # Encrypt the data 
@@ -49,7 +50,7 @@ class StealthConn(object):
             print(data,'data')
             print(type(data))
 
-            # Create the hmac hash using key and plaintext data
+            # Create the hmac hash using key and plaintext data # Task 3
             hashcode = self.hmac_sha256(self.shared_secret, data)
 
             # Create the dictionary to send
@@ -85,6 +86,8 @@ class StealthConn(object):
                 encrypted_data = self.conn.recv(pkt_len)
                 # Project TODO: as in send(), change the cipher here.
 
+                # Task 2
+
                 
                 # Unpickle the dictionary
                 b64 = pickle.loads(encrypted_data)
@@ -100,7 +103,7 @@ class StealthConn(object):
                 # Decrypt the data
                 original_msg = cipher.decrypt(ct)
 
-                # Create the hashcode to check against the received hashcode
+                # Create the hashcode to check against the received hashcode # Task 3
                 hashcode_check = self.hmac_sha256(self.shared_secret, original_msg)
 
                 if hashcode_check != hashcode:
