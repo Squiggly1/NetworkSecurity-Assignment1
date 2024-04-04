@@ -2,6 +2,7 @@ from typing import Tuple
 from Crypto.Hash import SHA256
 from lib.helpers import read_hex
 from random import randrange
+from Crypto.Util import number
 
 # Project TODO: Is this the best choice of prime? Why? Why not? Feel free to replace this!
 
@@ -47,3 +48,32 @@ def calculate_dh_secret(their_public: int, my_private: int) -> bytes:
     # Feel free to change SHA256 to a different value if more appropriate
     shared_hash = SHA256.new(str(shared_secret).encode()).digest()
     return shared_hash
+
+def rsa_keygen(e: int) -> Tuple[int, int, int]:
+    
+    # Select the public key, NIST specifies 2**16 > e >  2**256. 
+    
+
+    # Generate two large prime numbers (should be the same bit length)
+    q = number.getPrime(2048)
+    p = number.getPrime(2048)
+
+    # Calculate n, the modulus for the public and private keys
+    n = p * q
+
+    # If certain conditions (outlined in NIST.FIPS.186-5 5.1 RSA Key Pair Generation)
+    # are not met, regenerate the primes until they are met.
+    while abs(q - p) < pow(2,100) and len(bin(n)) % 2 == 0 and len(bin(n)) > 2**2048:
+        q = number.getPrime(2048)
+        p = number.getPrime(2048)
+        n = p * q
+    """The same standard outlines how to prove primes, i'm not going to do that here. I'll assume that
+    the pycryptodome function to generate primes can generate provable primes."""
+    
+    # Calculate the totient of n
+    phi = (p - 1) * (q - 1)
+
+    # Calculate the private key
+    d = pow(e, -1, phi)
+
+    return n, d
