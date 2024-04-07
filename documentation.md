@@ -36,3 +36,34 @@ def create_dh_key() -> Tuple[int, int]:
     
     return (public_key, private_key)       # Returns (public, private)
 ```
+## Integrity
+
+<span style="font-size:1.25em;">We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
+
+<span style="font-size:1.25em;">MACs achieves this by mapping abritary length strings into fixed length strings. The hashing algorithm should ensure that unique strings should generate unique codes.</span>
+
+<span style="font-size:1.25em;">Unlike hashes, MACs require a key. This is another reason that we favour MACs. As we are running a botnet, a highly illegal activity where being caught would lead to a jail sentence, we use a keyed hashing to provide better security and to also allow authentication in addition to data integrity. We do note, however this is more resource intensive than non-keyed hashing, but the extra security should be worthwhile.</span>
+
+<span style="font-size:1.25em;">The MAC framework we choose is HMAC, we choose this over secret suffix, secret prefix and envelope frameworks as HMAC has superior security and isn't weakn to birthday attacks or to length attacks and so on.</span>
+
+```python
+    # Create the hmac hash using key and plaintext data # Task 3
+    hashcode = self.hmac_sha256(self.shared_secret[1], data)
+     # Create the dictionary to send
+    dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+```
+<span style="font-size:1.25em;">Within the "send" function of the "comms.py" file, we have the above line. This uses a hashing framework, HMAC, and a hashing algorithm SHA-256 to securely hash our message. The input to this is our second secret shared key and the plain text data. The output is our hash code which is packed into a dictionary and sent with our encrypted message.</span>
+
+```python
+    # Create the hashcode to check against the received hashcode # Task 3
+    hashcode_check = self.hmac_sha256(self.shared_secret[1], original_msg)
+
+    if hashcode_check != hashcode:
+        raise ValueError("Hashes didn't match buddddy")
+    else:
+        print("Hashes are a match! Message wasn't tampered with. OR WAS IT?")
+
+```
+<span style="font-size:1.25em;">On the receiver side within the "recv" function, we calculate the hashcode with the decrypted message and the shared key as inputs. If the hashes match, we can continue knowing the integrity of the message has not be compromised. Otherwise we raise a ValueError as it indicates the message has been tampered with.</span>
+
+## Whatever?

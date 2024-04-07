@@ -63,9 +63,6 @@ class StealthConn(object):
             # Task 2
             cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
 
-            # Encrypt the data 
-            data_to_send = cipher.encrypt(data)
-
             # Create Nonce, in this case, automatically generated.
             nonce = cipher.nonce
 
@@ -77,6 +74,10 @@ class StealthConn(object):
                 self.nonce_set.add(nonce)
             
                 print(nonce, 'nonce not found in existing set. Adding to set.')
+
+                        
+            # Encrypt the data with the successful nonce.
+            data_to_send = cipher.encrypt(data)
             
             # Create the hmac hash using key and plaintext data # Task 3
             hashcode = self.hmac_sha256(self.shared_secret[1], data)
