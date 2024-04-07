@@ -35,4 +35,3 @@ def create_dh_key() -> Tuple[int, int]:
     public_key = pow(generator, private_key, prime)     # Creates a Diffie-Hellman key
     
     return (public_key, private_key)       # Returns (public, private)
-```
