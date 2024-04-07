@@ -3,6 +3,7 @@ from Crypto.Hash import SHA256
 from lib.helpers import read_hex
 from random import randrange
 from Crypto.Util import number
+import secrets
 
 # Project TODO: Is this the best choice of prime? Why? Why not? Feel free to replace this!
 
@@ -28,12 +29,11 @@ generator = 2 # As per RFC 3526
 def create_dh_key() -> Tuple[int, int]:
     # Creates a Diffie-Hellman key
     
-    priv = randrange(1, prime-2)
-
-    pub = pow(generator, priv, prime)
+    private_key = secrets.randbelow(prime - 2)
+    public_key = pow(generator, private_key, prime
 
     # Returns (public, private)
-    return (pub, priv)
+    return (public_key, private_key)
 
 
 def calculate_dh_secret(their_public: int, my_private: int) -> bytes:
