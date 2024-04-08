@@ -74,7 +74,6 @@ class StealthConn(object):
                 self.nonce_set.add(nonce)
             
                 print(nonce, 'nonce not found in existing set. Adding to set.')
-
                         
             # Encrypt the data with the successful nonce.
             data_to_send = cipher.encrypt(data)
