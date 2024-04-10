@@ -27,7 +27,7 @@ prime = read_hex(raw_prime)
 ``` python
 generator = 2 # As per RFC 3526
 ```
-- This function in the __init__.py is first used to calculate the shared public key:
+- This function in the \_\_init\_\_.py is first used to calculate the shared public key:
 
 ```python
 def create_dh_key() -> Tuple[int, int]:
@@ -35,3 +35,4 @@ def create_dh_key() -> Tuple[int, int]:
     public_key = pow(generator, private_key, prime)     # Creates a Diffie-Hellman key
     
     return (public_key, private_key)       # Returns (public, private)
+```
