@@ -30,7 +30,7 @@ def create_dh_key() -> Tuple[int, int]:
     # Creates a Diffie-Hellman key
     
     private_key = secrets.randbelow(prime - 2)
-    public_key = pow(generator, private_key, prime
+    public_key = pow(generator, private_key, prime)
 
     # Returns (public, private)
     return (public_key, private_key)
