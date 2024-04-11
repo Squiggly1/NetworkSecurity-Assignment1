@@ -36,3 +36,77 @@ def create_dh_key() -> Tuple[int, int]:
     
     return (public_key, private_key)       # Returns (public, private)
 ```
+## Integrity
+
+<span style="font-size:1.25em;">An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
+
+<span style="font-size:1.25em;">MACs achieves this by mapping abritary length strings into fixed length strings. The hashing algorithm should ensure that unique strings should generate unique codes.</span>
+
+<span style="font-size:1.25em;">Unlike hashes, MACs require a key. This is another reason that we favour MACs. As we are running a botnet, a highly illegal activity where being caught would lead to a jail sentence, we use a keyed hashing to provide better security and to also allow authentication in addition to data integrity. We do note, however this is more resource intensive than non-keyed hashing, but the extra security should be worthwhile.</span>
+
+<span style="font-size:1.25em;">The MAC framework we choose is HMAC, we choose this over secret suffix, secret prefix and envelope frameworks as HMAC has superior security and isn't weakn to birthday attacks or to length attacks and so on.</span>
+
+```python
+    # Create the hmac hash using key and plaintext data # Task 3
+    hashcode = self.hmac_sha256(self.shared_secret[1], data)
+     # Create the dictionary to send
+    dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+```
+<span style="font-size:1.25em;">Within the "send" function of the "comms.py" file, we have the above line. This uses a hashing framework, HMAC, and a hashing algorithm SHA-256 to securely hash our message. The input to this is our second secret shared key and the plain text data. The output is our hash code which is packed into a dictionary and sent with our encrypted message.</span>
+
+```python
+    # Create the hashcode to check against the received hashcode # Task 3
+    hashcode_check = self.hmac_sha256(self.shared_secret[1], original_msg)
+
+    if hashcode_check != hashcode:
+        raise ValueError("Hashes didn't match buddddy")
+    else:
+        print("Hashes are a match! Message wasn't tampered with. OR WAS IT?")
+
+```
+<span style="font-size:1.25em;">On the receiver side within the "recv" function, we calculate the hashcode with the decrypted message and the shared key as inputs. If the hashes match, we can continue knowing the integrity of the message has not be compromised. Otherwise we raise a ValueError as it indicates the message has been tampered with.</span>
+
+## Replay Prevention
+
+<span style="font-size:1.25em;">Replay is when an attacker tries to resend/retransmit a message, hoping the system still accepts the message. We counter this with the use of a nonce. A nonce is short for number-used-once. It is a random number appended to the message.</span>
+
+```python
+            # Task 2
+            cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
+
+            # Create Nonce, in this case, automatically generated.
+            nonce = cipher.nonce
+
+            # Check if the nonce is already in the set, if it is, generate a new one.
+            while nonce in self.nonce_set:
+                cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
+                nonce = cipher.nonce
+            else:    
+                self.nonce_set.add(nonce)
+            
+                print(nonce, 'nonce not found in existing set. Adding to set.')
+
+            # Encrypt the data with the successful nonce.
+            data_to_send = cipher.encrypt(data)
+
+            # Create the dictionary to send
+            dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+```
+<span style="font-size:1.25em;">The code above is taken from "comms.py" within the "send" function where we implement a nonce creator/checker. In the creation of a AES cipher object, we automatically create a nonce. We use a while loop to continually generate new cipher objects and the corresponding nonces, checking for duplicates in our set until we generate a non duplicate. Once this occurs, we can encrypt our message with the cipher object and the associated nonce. If a duplicate is created, we simply generate another nonce and cipher object.</span>
+
+<span style="font-size:1.25em;">Since the nonce is 64 bits we have 2^64 possibilities. So we could generate a million nonces a second for 10 years and not run out of space.</span>
+
+```python
+            # Extract the nonce and the ciphertext
+            nonce = b64['nonce']
+            if nonce in self.nonce_set:
+                print(nonce, 'nonce found in existing set. Discarding message.')
+                raise ValueError("Nonce was found in the set. Ending connection.")
+            else:
+                print(nonce, 'nonce not found in existing set. Adding to set. Message is not a replay attack.')
+```
+
+
+<span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We exract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
+
+## Authentication 
