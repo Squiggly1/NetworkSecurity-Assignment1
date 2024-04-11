@@ -13,7 +13,6 @@ from lib.files import (
     valuables,
 )
 
-
 def p2p_upload(fn):
     # Check if the file exists before sending empty
     if fn not in filestore:

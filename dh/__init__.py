@@ -39,6 +39,7 @@ def create_dh_key() -> Tuple[int, int]:
 def calculate_dh_secret(their_public: int, my_private: int) -> bytes:
     # Calculate the shared secret
     shared_secret = pow(their_public, my_private, prime)  # as per rfc2631.
+    print("Shared secret length: {}".format(shared_secret.bit_length()))
 
     # Hash the value so that:
     # (a) There's no bias in the bits of the output
@@ -48,6 +49,8 @@ def calculate_dh_secret(their_public: int, my_private: int) -> bytes:
     # Feel free to change SHA256 to a different value if more appropriate
     shared_hash = SHA256.new(str(shared_secret).encode()).digest()
     return shared_hash
+
+"""Ignore section below, not used."""
 
 def rsa_keygen(e: int) -> Tuple[int, int, int]:
     

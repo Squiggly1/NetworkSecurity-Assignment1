@@ -13,7 +13,8 @@ from Crypto.Hash import SHA256
 from lib.helpers import appendMac, macCheck, appendSalt, generate_random_string
 
 from typing import Tuple
-
+from Crypto.Protocol.KDF import HKDF
+from Crypto.Hash import SHA512
 
 
 class StealthConn(object):
@@ -26,8 +27,6 @@ class StealthConn(object):
         self.initiate_session()
         # Disable authentication for now
         self.nonce_set = set()
-
-
 
     def initiate_session(self):
         # Perform the initial connection handshake for agreeing on a shared secret
@@ -47,7 +46,7 @@ class StealthConn(object):
                 # Obtain our shared secret
                 self.shared_secret.append(calculate_dh_secret(their_public_key, my_private_key))
                 print("Shared first hash: {}".format(self.shared_secret))
-            # Disable this part, as it's not needed for the assignment.
+            # Disable this below part, as it's not needed for the assignment.
             """e = 65537
             n, d = rsa_keygen(e)
             self.rsa_private_key = RSA.construct((n, e, d))
@@ -55,6 +54,7 @@ class StealthConn(object):
 
     def send(self, data: bytes):
 
+        # If we have not generated 2 shared secrets, do not encrypt the data, just send it
         if len(self.shared_secret) == 2:
             # Encrypt the message
             # Project TODO: Is XOR the best cipher here? Why not? Use a more secure cipher (from the pycryptodome library)
@@ -202,6 +202,18 @@ class StealthConn(object):
 
         # Return the HMAC
         return outer_hash
+    
+    def key_derivation(shared_secret):
+
+        master_secret = get_random_bytes(32)
+        
+        key1, key2 = HKDF(master=master_secret, key_len=32, hashmod=SHA512, )
+
+        print(key1,key2)
+
+        return encryption_key
+
+    """Ignore below code, not used."""
 
     def rsa_signature(self, message: bytes, private_key: Tuple[int, int]) -> Tuple[bytes, Tuple[int, int]]:
 
