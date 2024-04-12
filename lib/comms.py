@@ -5,17 +5,16 @@ import secrets
 
 from dh import create_dh_key, calculate_dh_secret, rsa_keygen
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Util.Padding import unpad
 
-from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
-
+from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA256
 from lib.helpers import appendMac, macCheck, appendSalt, generate_random_string
 
 from typing import Tuple
-from Crypto.Protocol.KDF import HKDF
-from Crypto.Hash import SHA512
-
+from base64 import b64encode
 
 class StealthConn(object):
     def __init__(self, conn, client=False, server=False, verbose=False):
@@ -61,28 +60,32 @@ class StealthConn(object):
 
             # Modify XOR to AES CTR mode.
             # Task 2
-            cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
+            cipher = AES.new(self.shared_secret[0], AES.MODE_CBC)
 
             # Create Nonce, in this case, automatically generated.
-            nonce = cipher.nonce
+            # 64 bits of randomness
+            nonce = get_random_bytes(16)
 
             # Check if the nonce is already in the set, if it is, generate a new one.
             while nonce in self.nonce_set:
-                cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
-                nonce = cipher.nonce
+                nonce = get_random_bytes(16)
+                print("Nonce already in set. Generating new nonce.")
             else:    
                 self.nonce_set.add(nonce)
-            
                 print(nonce, 'nonce not found in existing set. Adding to set.')
                         
-            # Encrypt the data with the successful nonce.
-            data_to_send = cipher.encrypt(data)
-            
+            # Encrypt the data.                                      
+            data_to_send = cipher.encrypt(pad(data, AES.block_size))
+
+            # Generate initialization vector
+            iv = cipher.iv
+
             # Create the hmac hash using key and plaintext data # Task 3
             hashcode = self.hmac_sha256(self.shared_secret[1], data)
 
             # Create the dictionary to send
-            dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+            dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode,
+                             'iv':iv}
 
             # pickle the dictionary so that it can be sent using python socket.sendall()
             dict_to_send = pickle.dumps(dict_to_send)
@@ -130,18 +133,18 @@ class StealthConn(object):
                     raise ValueError("Nonce was found in the set. Ending connection.")
                 else:
                     print(nonce, 'nonce not found in existing set. Adding to set. Message is not a replay attack.')
-
+                iv = b64['iv']
                 ct = b64['ciphertext']
                 hashcode = b64['hash']
                 
                 # create new cipher object based on received nonce.
-                cipher = AES.new(self.shared_secret[0], AES.MODE_CTR, nonce=nonce)
-
-                # Decrypt the data
-                original_msg = cipher.decrypt(ct)
+                cipher = AES.new(self.shared_secret[0], AES.MODE_CBC, iv)
+                
+                # Decrypt the data and unpad our data
+                plain_text = unpad(cipher.decrypt(ct), AES.block_size)
 
                 # Create the hashcode to check against the received hashcode # Task 3
-                hashcode_check = self.hmac_sha256(self.shared_secret[1], original_msg)
+                hashcode_check = self.hmac_sha256(self.shared_secret[1], plain_text)
 
                 if hashcode_check != hashcode:
                     raise ValueError("Hashes didn't match buddddy")
@@ -152,16 +155,16 @@ class StealthConn(object):
                     print()
                     print("Receiving message of length: {}".format(len(encrypted_data)))
                     print("Encrypted data: {}".format(repr(encrypted_data)))
-                    print("Original message: {}".format(original_msg))
+                    print("Original message: {}".format(plain_text))
                     print()
             except (ValueError, KeyError):
 
                 print("Incorrect decryption or Hashes do not match")   
 
         else:
-            original_msg = self.conn.recv(pkt_len)
+            plain_text = self.conn.recv(pkt_len)
 
-        return original_msg
+        return plain_text
 
     def close(self):
         self.conn.close()
@@ -203,15 +206,7 @@ class StealthConn(object):
         # Return the HMAC
         return outer_hash
     
-    def key_derivation(shared_secret):
 
-        master_secret = get_random_bytes(32)
-        
-        key1, key2 = HKDF(master=master_secret, key_len=32, hashmod=SHA512, )
-
-        print(key1,key2)
-
-        return encryption_key
 
     """Ignore below code, not used."""
 

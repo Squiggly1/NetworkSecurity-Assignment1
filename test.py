@@ -1,5 +1,11 @@
+from Crypto.Cipher import AES
+import random
+from Crypto.Random import get_random_bytes
 
-q = "0x4000000000000000000020108A2E0CC0D99F8A5EF"
-q_int = int(q, 16)  # Convert hexadecimal string to integer
-bit_length = q_int.bit_length()  # Get bit length
-print(bit_length)
+shared_secret = get_random_bytes(16)
+
+
+cipher = AES.new(shared_secret, AES.MODE_CBC)
+nonce = cipher.nonce
+
+print(nonce, 'nonce')

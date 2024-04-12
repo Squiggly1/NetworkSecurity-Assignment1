@@ -1,25 +1,31 @@
-## Diffie-Hellman key exchange implementation
+## Key Exchange
 
-<span style="font-size:1.25em;">In order to insure encrypted communication in our application, we followed the Diffie-Hellman algorithim to implement a method for secure key exchange between two parties. This algorithim is the best method for two parties to be able to secretly share a symmetric key over a communication channel that isn't secure. In the end, this leads to each party possessing a simular shared secret without anyone else being able to determine what the secret key is. This solves one of the biggest problems in cryptography i.e., the key exchange problem.</span>
+<span style="font-size:1.25em;">In order to ensure encrypted communication in our application, we followed the Diffie-Hellman algorithim to implement a method for secure key exchange between two parties. This algorithim is the best method for two parties to be able to secretly share a symmetric key over a communication channel that isn't secure. In the end, this leads to each party possessing a simular shared secret without anyone else being able to determine what the shared secret is. This solves one of the biggest problems in cryptography i.e., the key exchange problem.</span>
+
+<span style="font-size:1.25em;">In our code we generate two shared secrets. One for encryption purposes and one for hashing purposes. This should improve security by reducing a centralised point of failure from having a single key. Should one of the keys be compromised in some way, only one of the functions (encryption or hashing) should fail. In this case, the failure/key leak should be detectable and precautions can be taken.</span>
 
 <span style="font-size:1.25em;">With Diffie-Hellman, the two parties must first agree on two parameters they are going to use. A value **g** called a generator, and value **p** which typically is a very large prime number. Each party will then select a secret value **a** and **b** that they keep private from anyone else. This secret value is used to calculate a public key which they can then exchange with each other openly.</span>
 
 <span style="font-size:1.25em;"> By using the public key that was given from the other recipent, they can then combine with initially agreed values of **g** and **p** to calculate a third value, known only to the two parties. This third value is the Diffie-Hellman Shared Secret key.</span>
 
-<span style="font-size:1.25em;"> Once the shared symmetric key is established, each party can then securly communicate over a public channel by exchanging encrypted data between each other that only the two parties sharing the same private key can decrypt. This essentially creates a secure channel for two parties to safely exchange secret information.</span>
+<span style="font-size:1.25em;"> Once the shared symmetric key is established, each party can then securely communicate over a public channel by exchanging encrypted data between each other that only the two parties sharing the same private key can decrypt. This essentially creates a secure channel for two parties to safely exchange secret information.</span>
 
-<span style="font-size:1.25em;"> To acheive this we followed the same algorithim listed in RFC 2361 paper to generate the keys, while using the perscribed values listed in RFC 3526. For this assignment we used the 1536-bit MODP Group for both the prime number **p** and generator **g**</span>
+<span style="font-size:1.25em;"> To achieve this we followed the same algorithim listed in RFC2361 to generate the keys, while using the perscribed values listed in RFC3526. For this assignment we used the 2048-bit MODP Group for both the prime number **p** and generator **g**. This MODP group should be suitable for our purposes as in section 8 of the document, they estimate the strength of using this particular modulus as between 110 and 160 bits. As we are aiming for a 128 bit strength encryption system, this should in theory make it suitable to balance between system strength and resource usage. </span>
+
 - Prime number *p*
 ```python
 # obtained from RFC 3526
 raw_prime = """FFFFFFFF FFFFFFFF C90FDAA2 2168C234 C4C6628B 80DC1CD1
-29024E08 8A67CC74 020BBEA6 3B139B22 514A0879 8E3404DD
-EF9519B3 CD3A431B 302B0A6D F25F1437 4FE1356D 6D51C245
-E485B576 625E7EC6 F44C42E9 A637ED6B 0BFF5CB6 F406B7ED
-EE386BFB 5A899FA5 AE9F2411 7C4B1FE6 49286651 ECE45B3D
-C2007CB8 A163BF05 98DA4836 1C55D39A 69163FA8 FD24CF5F
-83655D23 DCA3AD96 1C62F356 208552BB 9ED52907 7096966D
-670C354E 4ABC9804 F1746C08 CA237327 FFFFFFFF FFFFFFFF"""
+      29024E08 8A67CC74 020BBEA6 3B139B22 514A0879 8E3404DD
+      EF9519B3 CD3A431B 302B0A6D F25F1437 4FE1356D 6D51C245
+      E485B576 625E7EC6 F44C42E9 A637ED6B 0BFF5CB6 F406B7ED
+      EE386BFB 5A899FA5 AE9F2411 7C4B1FE6 49286651 ECE45B3D
+      C2007CB8 A163BF05 98DA4836 1C55D39A 69163FA8 FD24CF5F
+      83655D23 DCA3AD96 1C62F356 208552BB 9ED52907 7096966D
+      670C354E 4ABC9804 F1746C08 CA18217C 32905E46 2E36CE3B
+      E39E772C 180E8603 9B2783A2 EC07A28F B5C55DF0 6F4C52C9
+      DE2BCBF6 95581718 3995497C EA956AE5 15D22618 98FA0510
+      15728E5A 8AACAA68 FFFFFFFF FFFFFFFF"""
 # Convert from the value supplied in the RFC to an integer
 prime = read_hex(raw_prime)
 ```
@@ -36,6 +42,12 @@ def create_dh_key() -> Tuple[int, int]:
     
     return (public_key, private_key)       # Returns (public, private)
 ```
+# Confidentiality
+What was your choice of cipher? What mode of operation does it use?
+Why did you make these choices?
+
+<span style="font-size:1.25em;">We encrypt our data to hide the contents of our messages. For our system we use AES to encrypt our information. This encryption method was chosen as it is a Federal Information Processing Standard as listed by NIST. This should make the underlying algorithm behind its implementation mathematically secure. The mode that we choose is CBC or Cipher-Block Chaining is the mode of operation chosen for this implentation. As we are running a botnet, it is possible that the connection from server to client may not be completely stable. CBC prevents errors from propgating beyond two blocks.</span>
+
 ## Integrity
 
 <span style="font-size:1.25em;">An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
@@ -110,3 +122,26 @@ def create_dh_key() -> Tuple[int, int]:
 <span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We exract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
 
 ## Authentication 
+
+Why might we want to allow for peer-to-peer file transfers between bots?
+file transfer = keylogged data that's stolen
+financial files that's been stolen from user files
+
+
+What are the advantages and disadvantages to using a central web server
+(pastebot.net in our case, similar to pastebin.com) to distribute files when
+controlling a botnet?
+advantages = patching bots = easier
+
+
+disadvantage = 
+
+
+
+
+
+Although you did not work on communications between bots and a central
+server for this assignment, there is a major flaw in the template
+implementation of bot-server communications. Explain how your botnet,
+if used in the real world, could be trivially controlled by other hackers or
+government agencies. How might one attempt to stop it?
