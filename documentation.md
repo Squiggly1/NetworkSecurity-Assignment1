@@ -43,11 +43,30 @@ def create_dh_key() -> Tuple[int, int]:
     return (public_key, private_key)       # Returns (public, private)
 ```
 # Confidentiality
-What was your choice of cipher? What mode of operation does it use?
-Why did you make these choices?
 
-<span style="font-size:1.25em;">We encrypt our data to hide the contents of our messages. For our system we use AES to encrypt our information. This encryption method was chosen as it is a Federal Information Processing Standard as listed by NIST. This should make the underlying algorithm behind its implementation mathematically secure. The mode that we choose is CBC or Cipher-Block Chaining is the mode of operation chosen for this implentation. As we are running a botnet, it is possible that the connection from server to client may not be completely stable. CBC prevents errors from propgating beyond two blocks.</span>
+<span style="font-size:1.25em;">We encrypt our data to hide the contents of our messages. For our system we use AES to encrypt our information. This encryption method was chosen due to its status as a Federal Information Processing Standard as endorsed by NIST. This means the underlying algorithm behind its implementation should be mathematically strong and that it has undergone rigorous scrutiny/testing.</span>
 
+<span style="font-size:1.25em;">The mode of operation that we chose is CBC (Cipher-Block Chaining) for this implentation. As we are running a botnet, it is possible that the connection from server to client may not be completely stable. CBC prevents errors from propgating beyond two blocks. In CBC, each block of plaintext is XOR'ed with the previous block of ciphertext (or the IV for the first block). This error propogation means that errors will only affect two blocks and can enhance reliability</span>
+
+<span style="font-size:1.25em;">Additionally, since the botnet will have a central server, the central server must decrypt many messages. While encryption with CBC cannot be done in parallel, decryption can. This means that although the central server has more messages to decrypt, the time/resources required to decrypt is not as high if parallelisation was not allowed.</span>
+
+<span style="font-size:1.25em;">The code below highlights how we implement AES CBC to encrypt and decrypt.</span>
+
+```python
+# For encryption
+# Create the cipher object
+cipher = AES.new(self.shared_secret[0], AES.MODE_CBC)
+# Encrypt the data.                                      
+data_to_send = cipher.encrypt(pad(data, AES.block_size))
+```
+```python
+# For decryption
+# create new cipher object based on received IV.
+cipher = AES.new(self.shared_secret[0], AES.MODE_CBC, iv)
+
+# Decrypt the data and unpad our data
+plain_text = unpad(cipher.decrypt(ct), AES.block_size)
+```
 ## Integrity
 
 <span style="font-size:1.25em;">An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
@@ -59,21 +78,21 @@ Why did you make these choices?
 <span style="font-size:1.25em;">The MAC framework we choose is HMAC, we choose this over secret suffix, secret prefix and envelope frameworks as HMAC has superior security and isn't weakn to birthday attacks or to length attacks and so on.</span>
 
 ```python
-    # Create the hmac hash using key and plaintext data # Task 3
-    hashcode = self.hmac_sha256(self.shared_secret[1], data)
-     # Create the dictionary to send
-    dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+# Create the hmac hash using key and plaintext data # Task 3
+hashcode = self.hmac_sha256(self.shared_secret[1], data)
+    # Create the dictionary to send
+dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
 ```
 <span style="font-size:1.25em;">Within the "send" function of the "comms.py" file, we have the above line. This uses a hashing framework, HMAC, and a hashing algorithm SHA-256 to securely hash our message. The input to this is our second secret shared key and the plain text data. The output is our hash code which is packed into a dictionary and sent with our encrypted message.</span>
 
 ```python
-    # Create the hashcode to check against the received hashcode # Task 3
-    hashcode_check = self.hmac_sha256(self.shared_secret[1], original_msg)
+# Create the hashcode to check against the received hashcode # Task 3
+hashcode_check = self.hmac_sha256(self.shared_secret[1], original_msg)
 
-    if hashcode_check != hashcode:
-        raise ValueError("Hashes didn't match buddddy")
-    else:
-        print("Hashes are a match! Message wasn't tampered with. OR WAS IT?")
+if hashcode_check != hashcode:
+    raise ValueError("Hashes didn't match, Reject Message")
+else:
+    print("Hashes are a match! Message integrity confirmed.")
 
 ```
 <span style="font-size:1.25em;">On the receiver side within the "recv" function, we calculate the hashcode with the decrypted message and the shared key as inputs. If the hashes match, we can continue knowing the integrity of the message has not be compromised. Otherwise we raise a ValueError as it indicates the message has been tampered with.</span>
@@ -83,43 +102,36 @@ Why did you make these choices?
 <span style="font-size:1.25em;">Replay is when an attacker tries to resend/retransmit a message, hoping the system still accepts the message. We counter this with the use of a nonce. A nonce is short for number-used-once. It is a random number appended to the message.</span>
 
 ```python
-            # Task 2
-            cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
+# Task 2
+# Create Nonce with 64 bits of randomness
+nonce = get_random_bytes(16)
 
-            # Create Nonce, in this case, automatically generated.
-            nonce = cipher.nonce
+# Check if the nonce is already in the set, if it is, generate a new one.
+while nonce in self.nonce_set:
+    nonce = get_random_bytes(16)
+    print("Nonce already in set. Generating new nonce.")
+else:    
+    self.nonce_set.add(nonce)
+    print(nonce, 'nonce not found in existing set. Adding to set.')
 
-            # Check if the nonce is already in the set, if it is, generate a new one.
-            while nonce in self.nonce_set:
-                cipher = AES.new(self.shared_secret[0], AES.MODE_CTR)
-                nonce = cipher.nonce
-            else:    
-                self.nonce_set.add(nonce)
-            
-                print(nonce, 'nonce not found in existing set. Adding to set.')
-
-            # Encrypt the data with the successful nonce.
-            data_to_send = cipher.encrypt(data)
-
-            # Create the dictionary to send
-            dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
+# Create the dictionary to send
+dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode}
 ```
-<span style="font-size:1.25em;">The code above is taken from "comms.py" within the "send" function where we implement a nonce creator/checker. In the creation of a AES cipher object, we automatically create a nonce. We use a while loop to continually generate new cipher objects and the corresponding nonces, checking for duplicates in our set until we generate a non duplicate. Once this occurs, we can encrypt our message with the cipher object and the associated nonce. If a duplicate is created, we simply generate another nonce and cipher object.</span>
+<span style="font-size:1.25em;">The code above is taken from "comms.py" within the "send" function where we implement a nonce creator/checker. In the creation of a AES cipher object, we also create a nonce. We use a while loop to continually generate new nonces, checking for duplicates in our set until we generate a non duplicate. Once this occurs, we can encrypt our message with the cipher object and the associated nonce. If a duplicate is created, we simply generate another nonce.</span>
 
-<span style="font-size:1.25em;">Since the nonce is 64 bits we have 2^64 possibilities. So we could generate a million nonces a second for 10 years and not run out of space.</span>
+<span style="font-size:1.25em;">Since the nonce is 64 bits we have 2^64 possibilities. So we could generate a million nonces a second for 100 years and not run out of space.</span>
 
 ```python
-            # Extract the nonce and the ciphertext
-            nonce = b64['nonce']
-            if nonce in self.nonce_set:
-                print(nonce, 'nonce found in existing set. Discarding message.')
-                raise ValueError("Nonce was found in the set. Ending connection.")
-            else:
-                print(nonce, 'nonce not found in existing set. Adding to set. Message is not a replay attack.')
+# Extract the nonce and the ciphertext
+nonce = b64['nonce']
+if nonce in self.nonce_set:
+    print(nonce, 'nonce found in existing set. Discarding message.')
+    raise ValueError("Nonce was found in the set. Ending connection.")
+else:
+    print(nonce, 'nonce not found in existing set. Adding to set. Message is not a replay attack.')
 ```
 
-
-<span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We exract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
+<span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We extract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
 
 ## Authentication 
 

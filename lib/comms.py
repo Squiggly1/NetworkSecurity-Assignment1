@@ -60,10 +60,10 @@ class StealthConn(object):
 
             # Modify XOR to AES CTR mode.
             # Task 2
+            # Create the cipher object
             cipher = AES.new(self.shared_secret[0], AES.MODE_CBC)
 
-            # Create Nonce, in this case, automatically generated.
-            # 64 bits of randomness
+            # Create Nonce with 64 bits of randomness
             nonce = get_random_bytes(16)
 
             # Check if the nonce is already in the set, if it is, generate a new one.
@@ -77,7 +77,7 @@ class StealthConn(object):
             # Encrypt the data.                                      
             data_to_send = cipher.encrypt(pad(data, AES.block_size))
 
-            # Generate initialization vector
+            # Extract the initialization vector
             iv = cipher.iv
 
             # Create the hmac hash using key and plaintext data # Task 3
@@ -206,8 +206,6 @@ class StealthConn(object):
         # Return the HMAC
         return outer_hash
     
-
-
     """Ignore below code, not used."""
 
     def rsa_signature(self, message: bytes, private_key: Tuple[int, int]) -> Tuple[bytes, Tuple[int, int]]:
