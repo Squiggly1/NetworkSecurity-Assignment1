@@ -87,11 +87,8 @@ class StealthConn(object):
             dict_to_send = {'nonce':nonce, 'ciphertext':data_to_send, 'hash':hashcode,
                              'iv':iv}
 
-            # pickle the dictionary so that it can be sent using python socket.sendall()
+            # Pickle the dictionary so that it can be sent using python socket.sendall()
             dict_to_send = pickle.dumps(dict_to_send)
-
-            # Task 4 Signature
-            # signature = pkcs1_15.new(self.rsa_private_key).sign(SHA256.new(data))
 
             if self.verbose:
                 print()
@@ -137,7 +134,7 @@ class StealthConn(object):
                 ct = b64['ciphertext']
                 hashcode = b64['hash']
                 
-                # create new cipher object based on received nonce.
+                # create new cipher object based on received IV.
                 cipher = AES.new(self.shared_secret[0], AES.MODE_CBC, iv)
                 
                 # Decrypt the data and unpad our data
