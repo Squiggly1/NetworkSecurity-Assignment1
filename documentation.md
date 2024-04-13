@@ -145,6 +145,16 @@ else:
 
 * <span style="font-size:1.25em;">**Improved Network Topology:** P2P networks can dynamically adapt to changes in network topology more effectively than centralized systems. P2P bots perform as both a command distribution server and a client which receives commands. This way bots can join and leave the network dynamically without relying on a single point of failure.</span>
 
+<span style="font-size:1.25em;">Having a centralised web server to controll the distribution of files in a botnet has its own advantages</span>
+
+* <span style="font-size:1.25em;">**Increased Security:** Having a centralized file distribution can be more secure than P2P transfers, since access controls and encryption can be more easily enforced on a central server. This reduces the risk of unauthorized access to sensitive files</span>
+
+* <span style="font-size:1.25em;">**Reliability:** A centralised server can offer higher reliability and availability compared to P2P file transfers. P2P can be subject to connectivity issues or bottlenecks among individual bots.</span>
+
+* <span style="font-size:1.25em;">**Control:** A central web server provides centralized control over file distribution. The botnet operator can easily manage and monitor the files being distributed, ensuring that only authorized content is distrubuted.</span>
+
+* <span style="font-size:1.25em;">**Logging and Auditing:** A Centralized server controlling file distribution can facilitate logging and auditing of file transfers. This providing a clear record of which files were distributed, when, and to whom. This can be valuable in situations where forensic analysis is needed.</span>
+
 Why might we want to allow for peer-to-peer file transfers between bots?
 file transfer = keylogged data that's stolen
 financial files that's been stolen from user files
