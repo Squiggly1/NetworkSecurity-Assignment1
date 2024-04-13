@@ -155,25 +155,8 @@ else:
 
 * <span style="font-size:1.25em;">**Logging and Auditing:** A Centralized server controlling file distribution can facilitate logging and auditing of file transfers. This providing a clear record of which files were distributed, when, and to whom. This can be valuable in situations where forensic analysis is needed.</span>
 
-Why might we want to allow for peer-to-peer file transfers between bots?
-file transfer = keylogged data that's stolen
-financial files that's been stolen from user files
+<span style="font-size:1.25em;">A central server managing communication between bots in a botnet can be vulnerable to attacks by different agencies in a number of ways. This following lists hints at some ofthe ways they can include attacked and counter mearsures that can be put in place to prevent this: </span>
 
+- <span style="font-size:1.25em;">Exploiting Vulnerabilities in the software or configurations can points of entry for an attack. By ensure that the central server software is kept up-to-date with the latest security patches we can harden the security to prevent these kind of attacks.</span> 
+- <span style="font-size:1.25em;">Man-in-the-Middle (MitM) Attacks can also be used to intercept and manipulate communication between the bots and the central server. To prevent MitM attacks, use secure communication to encrypt traffic between bots and the central server. </span>
 
-What are the advantages and disadvantages to using a central web server
-(pastebot.net in our case, similar to pastebin.com) to distribute files when
-controlling a botnet?
-advantages = patching bots = easier
-
-
-disadvantage = 
-
-
-
-
-
-Although you did not work on communications between bots and a central
-server for this assignment, there is a major flaw in the template
-implementation of bot-server communications. Explain how your botnet,
-if used in the real world, could be trivially controlled by other hackers or
-government agencies. How might one attempt to stop it?
