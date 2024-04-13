@@ -134,6 +134,16 @@ else:
 <span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We extract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
 
 ## Authentication 
+<span style="font-size:1.25em;">Allowing peer-to-peer (P2P) file transfers between bots in a botnet can serve several purposes that may be desirable for certain types of scenarios. These bots may use digital signatures so that only someone with access to the private key can control the botnet</span>
+
+* <span style="font-size:1.25em;">**Anonymity:** Implementing P2P communication between bots, can provide a level of anonymity for file transfers to occur. Unlike centralized communication through a server, having P2P transfers will make it more challenging for an adversory to trace back to the originator. This enhances the botnet's stealth capabilities.
+</span>
+
+* <span style="font-size:1.25em;">**Scalability:** A P2P architecture can actualy scale more efficiently than relying on a central server using a client-server model to distribute files. As the size of the botnet grows, the burden on the central server increases, potentially leading to performance issues. Since "bots" or "zombies" can be remotely controlled by a command and control (C&C) server, P2P file transfers distribute the workload among multiple bots, allowing for better scalability.</span>
+
+* <span style="font-size:1.25em;">**Redunancy:** P2P file transfers between bots can also provide redundancy in file distribution. If one bot is unavailable or compromised, other bots can take its place and still distribute files among others. This enhances  resilience in the network. </span>
+
+* <span style="font-size:1.25em;">**Improved Network Topology:** P2P networks can dynamically adapt to changes in network topology more effectively than centralized systems. P2P bots perform as both a command distribution server and a client which receives commands. This way bots can join and leave the network dynamically without relying on a single point of failure.</span>
 
 Why might we want to allow for peer-to-peer file transfers between bots?
 file transfer = keylogged data that's stolen
