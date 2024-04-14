@@ -157,6 +157,8 @@ else:
 
 <span style="font-size:1.25em;">A central server managing communication between bots in a botnet can be vulnerable to attacks by different agencies in a number of ways. This following lists hints at some ofthe ways they can include attacked and counter mearsures that can be put in place to prevent this: </span>
 
-- <span style="font-size:1.25em;">Exploiting Vulnerabilities in the software or configurations can points of entry for an attack. By ensure that the central server software is kept up-to-date with the latest security patches we can harden the security to prevent these kind of attacks.</span> 
+- <span style="font-size:1.25em;">Exploiting Vulnerabilities in the software or configurations can points of entry for an attacker. By ensure that the central server software is kept up-to-date with the latest security patches we can harden the security to prevent these kind of attacks.</span> 
 - <span style="font-size:1.25em;">Man-in-the-Middle (MitM) Attacks can also be used to intercept and manipulate communication between the bots and the central server. To prevent MitM attacks, use secure communication to encrypt traffic between bots and the central server. </span>
+- <span style="font-size:1.25em;">Brute force techniques can also be employed to gain access to the encrypted information and secret key information. By strengthening the bit size of the key we can limit the chances of a brute force attack succeeding.</span>
+- <span style="font-size:1.25em;">Cryptoanalysis type attacks is another form of attack vector that ca be used to gain access to contents of the encrypted messages. Information gained from These attackes can be used decipher messages and deduce the secret key or find a functionally equivalent algorithm for encryption and decryption that does not require knowledge of the secret key.</span>
 
