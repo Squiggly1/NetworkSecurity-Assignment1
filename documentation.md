@@ -69,7 +69,7 @@ plain_text = unpad(cipher.decrypt(ct), AES.block_size)
 ```
 ## Integrity
 
-<span style="font-size:1.25em;">An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
+<span style="font-size:1.25em;">Since operation such as CBC only provide guarantees over the confidentiality of the message but not over its integrity. An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
 
 <span style="font-size:1.25em;">MACs achieves this by mapping abritary length strings into fixed length strings. The hashing algorithm should ensure that unique strings should generate unique codes.</span>
 
