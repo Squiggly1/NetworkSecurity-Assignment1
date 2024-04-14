@@ -50,7 +50,7 @@ def create_dh_key() -> Tuple[int, int]:
 
 <span style="font-size:1.25em;">Additionally, since the botnet will have a central server, the central server must decrypt many messages. While encryption with CBC cannot be done in parallel, decryption can. This means that although the central server has more messages to decrypt, the time/resources required to decrypt is not as high if parallelisation was not allowed.</span>
 
-<span style="font-size:1.25em;">The code below highlights how we implement AES CBC to encrypt and decrypt.</span>
+<span style="font-size:1.25em;">Using the shared secret we obtained during the Diffie Hellman key exchange, we create a symetric key using the AES algorithim to encrypt and dcrypt protected data. The code below highlights how we establish confidentiality using AES CBC to encrypt and decrypt data transmition.</span>
 
 ```python
 # For encryption
@@ -160,5 +160,5 @@ else:
 - <span style="font-size:1.25em;">Exploiting Vulnerabilities in the software or configurations can points of entry for an attacker. By ensure that the central server software is kept up-to-date with the latest security patches we can harden the security to prevent these kind of attacks.</span> 
 - <span style="font-size:1.25em;">Man-in-the-Middle (MitM) Attacks can also be used to intercept and manipulate communication between the bots and the central server. To prevent MitM attacks, use secure communication to encrypt traffic between bots and the central server. </span>
 - <span style="font-size:1.25em;">Brute force techniques can also be employed to gain access to the encrypted information and secret key information. By strengthening the bit size of the key we can limit the chances of a brute force attack succeeding.</span>
-- <span style="font-size:1.25em;">Cryptoanalysis type attacks is another form of attack vector that ca be used to gain access to contents of the encrypted messages. Information gained from These attackes can be used decipher messages and deduce the secret key or find a functionally equivalent algorithm for encryption and decryption that does not require knowledge of the secret key.</span>
+- <span style="font-size:1.25em;">Cryptoanalysis type attacks is another form of attack vector that can be used to gain access to contents of the encrypted messages. Information gained from These attackes can be used decipher messages and deduce the secret key or find a functionally equivalent algorithm for encryption and decryption that does not require knowledge of the secret key.</span>
 
