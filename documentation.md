@@ -1,16 +1,16 @@
 ## Key Exchange
 
-<span style="font-size:1.25em;">In order to ensure encrypted communication in our application, we followed the Diffie-Hellman algorithim to implement a method for secure key exchange between two parties. This algorithim is the best method for two parties to be able to secretly share a symmetric key over a communication channel that isn't secure. In the end, this leads to each party possessing a simular shared secret without anyone else being able to determine what the shared secret is. This solves one of the biggest problems in cryptography i.e., the key exchange problem.</span>
+<span style="font-size:1.25em;">In order to ensure encrypted communication in our application, we followed the Diffie-Hellman algorithm to implement a method for secure key exchange between two parties. This algorithm is the best method for two parties to be able to secretly share a symmetric key over a communication channel that isn't secure. In the end, this leads to each party possessing a simular shared secret without anyone else being able to determine what the shared secret is. This solves one of the biggest problems in cryptography i.e., the key exchange problem.</span>
 
 <span style="font-size:1.25em;">In our code we generate two shared secrets. One for encryption purposes and one for hashing purposes. This should improve security by reducing a centralised point of failure from having a single key. Should one of the keys be compromised in some way, only one of the functions (encryption or hashing) should fail. In this case, the failure/key leak should be detectable and precautions can be taken.</span>
 
 <span style="font-size:1.25em;">With Diffie-Hellman, the two parties must first agree on two parameters they are going to use. A value **g** called a generator, and value **p** which typically is a very large prime number. Each party will then select a secret value **a** and **b** that they keep private from anyone else. This secret value is used to calculate a public key which they can then exchange with each other openly.</span>
 
-<span style="font-size:1.25em;"> By using the public key that was given from the other recipent, they can then combine with initially agreed values of **g** and **p** to calculate a third value, known only to the two parties. This third value is the Diffie-Hellman Shared Secret key.</span>
+<span style="font-size:1.25em;"> By using the public key that was given from the other recipient, they can then combine with initially agreed values of **g** and **p** to calculate a third value, known only to the two parties. This third value is the Diffie-Hellman Shared Secret key.</span>
 
 <span style="font-size:1.25em;"> Once the shared symmetric key is established, each party can then securely communicate over a public channel by exchanging encrypted data between each other that only the two parties sharing the same private key can decrypt. This essentially creates a secure channel for two parties to safely exchange secret information.</span>
 
-<span style="font-size:1.25em;"> To achieve this we followed the same algorithim listed in RFC2361 to generate the keys, while using the perscribed values listed in RFC3526. For this assignment we used the 2048-bit MODP Group for both the prime number **p** and generator **g**. This MODP group should be suitable for our purposes as in section 8 of the document, they estimate the strength of using this particular modulus as between 110 and 160 bits. As we are aiming for a 128 bit strength encryption system, this should in theory make it suitable to balance between system strength and resource usage. </span>
+<span style="font-size:1.25em;"> To achieve this we followed the same algorithm listed in RFC2361 to generate the keys, while using the prescribed values listed in RFC3526. For this assignment we used the 2048-bit MODP Group for both the prime number **p** and generator **g**. This MODP group should be suitable for our purposes as in section 8 of the document, they estimate the strength of using this particular modulus as between 110 and 160 bits. As we are aiming for a 128 bit strength encryption system, this should in theory make it suitable to balance between system strength and resource usage. </span>
 
 - Prime number *p*
 ```python
@@ -46,11 +46,11 @@ def create_dh_key() -> Tuple[int, int]:
 
 <span style="font-size:1.25em;">We encrypt our data to hide the contents of our messages. For our system we use AES to encrypt our information. This encryption method was chosen due to its status as a Federal Information Processing Standard as endorsed by NIST. This means the underlying algorithm behind its implementation should be mathematically strong and that it has undergone rigorous scrutiny/testing.</span>
 
-<span style="font-size:1.25em;">The mode of operation that we chose is CBC (Cipher-Block Chaining) for this implentation. As we are running a botnet, it is possible that the connection from server to client may not be completely stable. CBC prevents errors from propgating beyond two blocks. In CBC, each block of plaintext is XOR'ed with the previous block of ciphertext (or the IV for the first block). This error propogation means that errors will only affect two blocks and can enhance reliability</span>
+<span style="font-size:1.25em;">The mode of operation that we chose is CBC (Cipher-Block Chaining) for this implementation. As we are running a botnet, it is possible that the connection from server to client may not be completely stable. CBC prevents errors from propgating beyond two blocks. In CBC, each block of plaintext is XOR'ed with the previous block of ciphertext (or the IV for the first block). This error propgation means that errors will only affect two blocks and can enhance reliability</span>
 
 <span style="font-size:1.25em;">Additionally, since the botnet will have a central server, the central server must decrypt many messages. While encryption with CBC cannot be done in parallel, decryption can. This means that although the central server has more messages to decrypt, the time/resources required to decrypt is not as high if parallelisation was not allowed.</span>
 
-<span style="font-size:1.25em;">Using the shared secret we obtained during the Diffie Hellman key exchange, we create a symetric key using the AES algorithim to encrypt and dcrypt protected data. The code below highlights how we establish confidentiality using AES CBC to encrypt and decrypt data transmition.</span>
+<span style="font-size:1.25em;">Using the shared secret we obtained during the Diffie Hellman key exchange, we create a symmetric key using the AES algorithim to encrypt and decrypt protected data. The code below highlights how we establish confidentiality using AES CBC to encrypt and decrypt data transmission.</span>
 
 ```python
 # For encryption
@@ -69,13 +69,13 @@ plain_text = unpad(cipher.decrypt(ct), AES.block_size)
 ```
 ## Integrity
 
-<span style="font-size:1.25em;">Since operation such as CBC only provide guarantees over the confidentiality of the message but not over its integrity. An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allows us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
+<span style="font-size:1.25em;">Since operation such as CBC only provide guarantees over the confidentiality of the message but not over its integrity. An attacker could try to modify a message in transit and hope the receiver still accepts it. We ensure integrity through the use of MACs or Message Authentication Codes. MACs allow us to verify knowledge without revealing details. Assuming that communications is captured, the MAC should not expose underlying information about our plain text data.</span>
 
-<span style="font-size:1.25em;">MACs achieves this by mapping abritary length strings into fixed length strings. The hashing algorithm should ensure that unique strings should generate unique codes.</span>
+<span style="font-size:1.25em;">MACs achieve this by mapping arbitary length strings into fixed length strings. The hashing algorithm should ensure that unique strings should generate unique codes.</span>
 
 <span style="font-size:1.25em;">Unlike hashes, MACs require a key. This is another reason that we favour MACs. As we are running a botnet, a highly illegal activity where being caught would lead to a jail sentence, we use a keyed hashing to provide better security and to also allow authentication in addition to data integrity. We do note, however this is more resource intensive than non-keyed hashing, but the extra security should be worthwhile.</span>
 
-<span style="font-size:1.25em;">The MAC framework we choose is HMAC, we choose this over secret suffix, secret prefix and envelope frameworks as HMAC has superior security and isn't weakn to birthday attacks or to length attacks and so on.</span>
+<span style="font-size:1.25em;">The MAC framework we choose is HMAC, we choose this over secret suffix, secret prefix and envelope frameworks as HMAC has superior security and isn't weak to birthday attacks or to length attacks and so on.</span>
 
 ```python
 # Create the hmac hash using key and plaintext data # Task 3
@@ -131,34 +131,40 @@ else:
     print(nonce, 'nonce not found in existing set. Adding to set. Message is not a replay attack.')
 ```
 
-<span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We extract the nonce from the dictionary and the reciever checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
+<span style="font-size:1.25em;">In the "recv" function we implement a nonce checker, this will be where we detect replay attacks. We extract the nonce from the dictionary and the receiver checks the nonce against a set of existing nonces. If a message has a nonce that already exists in the set, this indicates that the message may be a replay attack. However, if the nonce is unique, we add it to the set, indicating it is a "seen nonce"</span>
 
 ## Authentication 
-<span style="font-size:1.25em;">Allowing peer-to-peer (P2P) file transfers between bots in a botnet can serve several purposes that may be desirable for certain types of scenarios. These bots may use digital signatures so that only someone with access to the private key can control the botnet</span>
+<span style="font-size:1.25em;">Allowing peer-to-peer (P2P) file transfers between bots in a botnet can serve several purposes that may be desirable for certain types of scenarios.</span>
 
-* <span style="font-size:1.25em;">**Anonymity:** Implementing P2P communication between bots, can provide a level of anonymity for file transfers to occur. Unlike centralized communication through a server, having P2P transfers will make it more challenging for an adversory to trace back to the originator. This enhances the botnet's stealth capabilities.
+* <span style="font-size:1.25em;">**Anonymity:** Implementing P2P communication between bots, can provide a level of anonymity for file transfers to occur. Unlike centralized communication through a server, having P2P transfers will make it more challenging for an adversary to trace back to the originator. This enhances the botnet's stealth capabilities.
 </span>
 
-* <span style="font-size:1.25em;">**Scalability:** A P2P architecture can actualy scale more efficiently than relying on a central server using a client-server model to distribute files. As the size of the botnet grows, the burden on the central server increases, potentially leading to performance issues. Since "bots" or "zombies" can be remotely controlled by a command and control (C&C) server, P2P file transfers distribute the workload among multiple bots, allowing for better scalability.</span>
+* <span style="font-size:1.25em;">**Redundancy:** P2P file transfers between bots can also provide redundancy in file distribution. If one bot is unavailable or compromised, other bots can take its place and still distribute files among others. This enhances  resilience in the network. </span>
 
-* <span style="font-size:1.25em;">**Redunancy:** P2P file transfers between bots can also provide redundancy in file distribution. If one bot is unavailable or compromised, other bots can take its place and still distribute files among others. This enhances  resilience in the network. </span>
+* <span style="font-size:1.25em;">**Updates and downloads:** By allowing for P2P file transfers, the bots can transfer large files to the central server or with each other. As we are running a botnet, the files would most likely have value, such as: key logs of the infected computer, stolen files, bitcoin data chunks and so on. Additionally allowing file transfers would enable patches/updates to bot behaviour.</span>
 
-* <span style="font-size:1.25em;">**Improved Network Topology:** P2P networks can dynamically adapt to changes in network topology more effectively than centralized systems. P2P bots perform as both a command distribution server and a client which receives commands. This way bots can join and leave the network dynamically without relying on a single point of failure.</span>
+<span style="font-size:1.25em;">Having a centralised web server to control the distribution of files in a botnet has its own advantages and disadvantages.</span>
 
-<span style="font-size:1.25em;">Having a centralised web server to controll the distribution of files in a botnet has its own advantages</span>
-
+<span style="font-size:1.25em;">**Advantages**</span>
 * <span style="font-size:1.25em;">**Increased Security:** Having a centralized file distribution can be more secure than P2P transfers, since access controls and encryption can be more easily enforced on a central server. This reduces the risk of unauthorized access to sensitive files</span>
 
 * <span style="font-size:1.25em;">**Reliability:** A centralised server can offer higher reliability and availability compared to P2P file transfers. P2P can be subject to connectivity issues or bottlenecks among individual bots.</span>
 
-* <span style="font-size:1.25em;">**Control:** A central web server provides centralized control over file distribution. The botnet operator can easily manage and monitor the files being distributed, ensuring that only authorized content is distrubuted.</span>
+* <span style="font-size:1.25em;">**Control:** A central web server provides centralized control over file distribution. The botnet operator can easily manage and monitor the files being distributed, ensuring that only authorized content is distributed.</span>
 
 * <span style="font-size:1.25em;">**Logging and Auditing:** A Centralized server controlling file distribution can facilitate logging and auditing of file transfers. This providing a clear record of which files were distributed, when, and to whom. This can be valuable in situations where forensic analysis is needed.</span>
 
-<span style="font-size:1.25em;">A central server managing communication between bots in a botnet can be vulnerable to attacks by different agencies in a number of ways. One of these is authenticating the parties involved are who they claim to be. For this reason the key exchange would normally be implemented along side some form of authentication. This can include the following:</span>
+<span style="font-size:1.25em;">**Disadvantages**</span>
+* <span style="font-size:1.25em;">**Single point of failure** Having a centralized file distribution also means that if it fails, the whole botnet is compromised. This introduces a major weakness to the botnet that attackers can focus their attention on. Instead of using resources to break encryption, attackers could try to find weaknesses in the central webserver instead.</span>
 
-- <span style="font-size:1.25em;">Public Key Infrastructure (PKI) Authentication: This involves the use of digital certificates issued by a trusted Certificate Authority (CA) to authenticate the identities of the communicating parties. Each party's public key is embedded in their certificate, which is signed by the CA.</span>
-- <span style="font-size:1.25em;">Digital Signatures: Each party can digitally sign messages with a digital signature providing a sure way of authentication. The recipient can verify the signature providing authentication</span>
+* <span style="font-size:1.25em;">**Hardware Scalability:** In the lectures Conficker is used as an example of a highly 'succesfull' botnet. Conficker is said to have infected millions of computers. We can image the resources required to manage a million bots in terms of encrypting messages, decrypting messages, pushing updates, downloading files from the bots and so on. It is possible that without adequate and properly scaled hardware, the botnet would not operate at maximum efficiency and vulnerabilities could stem from this.</span>
 
-<span style="font-size:1.25em;">While Diffie-Hellman itself doesn't provide authentication, it can be combined with other cryptographic techniques or protocols to achieve secure authentication during the key exchange process. For instance, if there was some way for the parties involved could securely communicate before hand and pre share their public keys like in RSA key exchange; they can verify every communication with a digital signature verifying there identify. This is why in modern forms hybrid techniques of encryption is usually implemented</span>
+* <span style="font-size:1.25em;">**Traceability:** As mentioned above, with a million bots the traffic could not be hidden. It should be possible to find patterns in packet routing to deduct where the webserver is operating in. Again with the Conficker example, the botnet was too succesfull in spreading which lead to attention from security analysts. Obvious or large traffic patterns would bring attention to our illegal enterprise. </span>
+
+<span style="font-size:1.25em;">In the template given the major flaw that would easily allow for control to be taken over is the method of authentication before the Diffie-Hellman Key exchange. The way the template handles key exchange is to immediately share public keys to generate a shared secret when the client a server. There is no form of authentication to ensure that the client is who they say they are. Once a malicious attacker pretending to be a client (or server) has a shared secret, it would be trivial for the botnet to be controlled.</span>
+
+<span style="font-size:1.25em;">The usual way that this issue is solved is through the use of a digital certificate system and a certificate authority. As the client is a bot, the certificate authority could use a challenge response system instead of a typical identification system. Challenge response could allow a client to prove their identity without revealing the secret. However new bots must be able to generate the exact same secret which would have its own challenges and vulnerabilities. Once a digital certificate is gained RSA can be used to sign the certificates using private keys with verification done with public keys. This method should allow the server some confidence that the client is friendly and not a malicious attacker.</span>
+
+
+
 
